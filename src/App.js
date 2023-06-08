@@ -1,44 +1,32 @@
-import { useRef, useState, useEffect } from "react";
-import { Auth } from "./components/auth/auth";
+import React, { useState, useEffect } from "react";
+import { Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import Home from "./components/home/home.jsx";
+import Chatroom from "./components/chatroom/chatroom.jsx";
+import Login from "./components/auth/login.jsx";
+import SignUp from "./components/auth/sign-up.jsx";
+import { auth } from "./components/firebase/firebase-config.js";
+import { signOut } from "firebase/auth";
 import Cookies from "universal-cookie";
-import Chatroom from "./components/chatroom/chatroom";
-import { signOut, onAuthStateChanged } from "firebase/auth";
-import { auth } from "./components/firebase/firebase-config";
+import logo from "./components/images/logo.png";
+import "./App.scss";
 
 const cookies = new Cookies();
 
 function App() {
-  const [isAuth, setIsAuth] = useState(false); // Initialize with false
-  const [room, setRoom] = useState(null); // Initialize with null
+  const [isAuth, setIsAuth] = useState(false);
+  const [room, setRoom] = useState(null);
 
-  const roomInputRef = useRef(null);
+  const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const authToken = cookies.get("auth-token");
-    setIsAuth(!!authToken); // Set isAuth based on the existence of "auth-token" cookie
-
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setIsAuth(true);
-      } else {
-        setIsAuth(false);
-      }
-    });
-
-    return () => unsubscribe(); // Cleanup the listener when the component unmounts
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem("room", room); // Store the current room value in local storage
-  }, [room]);
-
-  if (!isAuth) {
-    return (
-      <div className="App">
-        <Auth />
-      </div>
-    );
-  }
+    if (authToken) {
+      setIsAuth(true);
+    } else {
+      navigate("/");
+    }
+  }, [navigate]);
 
   const signUserOut = async () => {
     try {
@@ -46,30 +34,36 @@ function App() {
       cookies.remove("auth-token");
       setIsAuth(false);
       setRoom(null);
-      localStorage.removeItem("room"); // Remove the stored room value when signing out
+      localStorage.removeItem("room");
+      navigate("/");
     } catch (error) {
       console.log(error);
     }
   };
 
   return (
-    <>
-      {room ? (
-        <Chatroom room={room} />
-      ) : (
-        <div className="room">
-          <label>Enter Room Name:</label>
-          <input ref={roomInputRef} />
-          <button onClick={() => setRoom(roomInputRef.current.value)}>
-            Enter Chat
-          </button>
-        </div>
-      )}
-
-      <div>
+    <div className="App">
+      <div className="navigation">
+        <img src={logo} alt="logo" />
         <button onClick={signUserOut}>Sign Out</button>
       </div>
-    </>
+      <Routes location={location}>
+        <Route
+          exact
+          path="/home"
+          element={
+            <Home
+              isAuth={isAuth}
+              setIsAuth={setIsAuth}
+              room={room}
+              setRoom={setRoom}
+            />
+          }
+        />
+        <Route exact path="/" element={<Login />} />
+        <Route exact path="/chatroom" element={<Chatroom />} />
+      </Routes>
+    </div>
   );
 }
 

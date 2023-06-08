@@ -1,65 +1,60 @@
-// import { signOut } from "firebase/auth";
-// import { useNavigate } from "react-router-dom";
-// import { db, auth } from "../firebase/firebase-config.js";
-// import { useState, useEffect } from "react";
-// import { collection, getDocs, addDoc, onSnapshot } from "firebase/firestore";
+import React, { useState, useRef, useEffect } from "react";
+import Cookies from "universal-cookie";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "../firebase/firebase-config.js";
+import { useNavigate, useLocation } from "react-router-dom";
+import "./home.scss";
 
-// const Home = () => {
-//   const navigate = useNavigate();
-//   const [messages, setMessages] = useState([]);
-//   const [newMessage, setNewMessage] = useState("");
+const cookies = new Cookies();
 
-//   useEffect(() => {
-//     const unsubscribe = onSnapshot(collection(db, "messages"), (snapshot) => {
-//       const data = snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
-//       setMessages(data);
-//     });
+const Home = () => {
+  const roomInputRef = useRef(null);
+  const navigate = useNavigate();
+  const location = useLocation();
 
-//     return unsubscribe;
-//   }, []);
+  const [loggedIn, setLoggedIn] = useState(true);
+  const [room, setRoom] = useState("");
 
-//   const sendMessage = async (event) => {
-//     event.preventDefault();
+  useEffect(() => {
+    const authToken = cookies.get("auth-token");
+    setLoggedIn(!!authToken);
 
-//     if (newMessage === "") {
-//       alert("Please enter a valid message");
-//     } else {
-//       await addDoc(collection(db, "messages"), {
-//         message: newMessage,
-//       });
-//     }
-//     setNewMessage("");
-//   };
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setLoggedIn(!!user);
+    });
 
-//   const signout = async () => {
-//     await signOut(auth);
-//     navigate("/");
-//   };
+    return () => unsubscribe();
+  }, []);
 
-//   return (
-//     <div className="home">
-//       <button onClick={signout}>Sign Out</button>
-//       <h1>Home</h1>
-//       <form>
-//         <input
-//           maxLength="10"
-//           placeholder="Enter a new message.."
-//           value={newMessage}
-//           onChange={(event) => {
-//             setNewMessage(event.target.value);
-//           }}
-//         />
-//         <button type="submit" onClick={sendMessage}>
-//           Submit
-//         </button>
-//       </form>
-//       <ul>
-//         {messages.map((message) => (
-//           <h2 key={message.id}>{message.message}</h2>
-//         ))}
-//       </ul>
-//     </div>
-//   );
-// };
+  useEffect(() => {
+    localStorage.setItem("room", room);
+  }, [room]);
 
-// export default Home;
+  const handleEnterChat = () => {
+    const roomName = roomInputRef.current.value;
+    if (roomName.trim() !== "") {
+      setRoom(roomName);
+      navigate("/chatroom", { state: { room: roomName } });
+    }
+  };
+
+  useEffect(() => {
+    if (!loggedIn) {
+      navigate("/");
+    }
+  }, [loggedIn, navigate]);
+
+  return (
+    <div className="chooseRoom">
+      <div className="container">
+        <div>
+          <h1>Enter Server Name:</h1>
+        </div>
+        <input ref={roomInputRef} maxLength="12" />
+        <button onClick={handleEnterChat}>Enter Chat</button>
+      </div>
+    </div>
+  );
+};
+
+export default Home;

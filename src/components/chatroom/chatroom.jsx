@@ -9,43 +9,55 @@ import {
 } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { auth, db } from "../firebase/firebase-config.js";
+import { useLocation } from "react-router";
 
-const Chatroom = (props) => {
-  const { room } = props;
+const Chatroom = () => {
   const [newMessage, setNewMessage] = useState("");
   const [messages, setMessages] = useState([]);
+
+  const location = useLocation();
+
+  const room = location.state.room;
 
   const messagesRef = collection(db, "messages");
 
   useEffect(() => {
-    const queryMessages = query(
-      messagesRef,
-      where("room", "==", room),
-      orderBy("createdAt")
-    );
-    const unsubscribe = onSnapshot(queryMessages, (snapshot) => {
-      let messages = [];
-      snapshot.forEach((doc) => {
-        messages.push({ ...doc.data(), id: doc.id });
+    if (room) {
+      const queryMessages = query(
+        messagesRef,
+        where("room", "==", room),
+        orderBy("createdAt")
+      );
+      const unsubscribe = onSnapshot(queryMessages, (snapshot) => {
+        let messages = [];
+        snapshot.forEach((doc) => {
+          messages.push({ ...doc.data(), id: doc.id });
+        });
+        setMessages(messages);
       });
-      setMessages(messages);
-    });
 
-    return () => unsubscribe();
-  }, []);
+      return () => unsubscribe();
+    }
+  }, [room]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (newMessage === " ") return;
+    if (!room || newMessage.trim() === "") return;
 
-    await addDoc(messagesRef, {
-      text: newMessage,
-      createdAt: serverTimestamp(),
-      user: auth.currentUser.displayName,
-      room,
-    });
+    try {
+      await addDoc(messagesRef, {
+        text: newMessage,
+        createdAt: serverTimestamp(),
+        user: auth.currentUser.displayName,
+        room,
+      });
+    } catch (error) {
+      console.log("Error adding message: ", error);
+    }
 
     setNewMessage("");
   };
+
   return (
     <div className="chat-app">
       <div>
@@ -56,7 +68,7 @@ const Chatroom = (props) => {
       <form className="new-message" onSubmit={handleSubmit}>
         <input
           className="new-message-input"
-          placeholder="Enter your messageg here.."
+          placeholder="Enter your message here.."
           onChange={(e) => setNewMessage(e.target.value)}
           value={newMessage}
         />

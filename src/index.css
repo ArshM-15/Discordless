@@ -1,0 +1,15 @@
+body {
+  margin: 0;
+  padding: 0;
+  /* background: rgb(37, 37, 37);
+  background: linear-gradient(
+    135deg,
+    rgba(37, 37, 37, 1) 9%,
+    rgba(114, 137, 218, 1) 100%
+  ); */
+  background-color: #313338;
+  /* background-color: black; */
+  background-repeat: no-repeat;
+  background-size: 100% 100vh;
+  font-family: "Poppins", sans-serif;
+}

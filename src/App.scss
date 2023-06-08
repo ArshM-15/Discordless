@@ -1,0 +1,48 @@
+.App {
+  .navigation {
+    display: flex;
+    align-items: center;
+    // width: 50%;
+    // margin-left: 40%;
+    padding: 1% 0 2% 0;
+    background-color: #313338;
+    // box-shadow: 0px 4px 16px rgba(40, 40, 40, 0.5);
+    @media (max-width: 900px) {
+      margin-left: 20%;
+    }
+    button {
+      all: unset;
+      //   margin-top: 2%;
+      margin-right: 2rem;
+      width: 5rem;
+      height: 2rem;
+      background-color: rgb(85, 85, 85);
+      border-radius: 20px;
+      text-align: center;
+      transition: 0.3s;
+      color: #fff;
+      padding: 0.1rem 0.8rem;
+      font-weight: 500;
+      font-size: 1.1rem;
+    }
+
+    button:hover {
+      cursor: pointer;
+      background-color: #7289da;
+      border-radius: 10px;
+    }
+
+    img {
+      display: block;
+      height: 3rem;
+      width: 18.5rem;
+      margin: auto;
+      padding-left: 8rem;
+      @media (max-width: 900px) {
+        height: 2.5rem;
+        width: 15rem;
+        padding-left: 0;
+      }
+    }
+  }
+}
